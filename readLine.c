@@ -6,7 +6,7 @@
 
 // reads one line from a file into a buffer, increases the buffer size if necessary 
 // buffer location is written back into the parameter **line
-// returns NULL on read-error/eof otherwise the returns *line 
+// returns NULL on read-error/eof otherwise returns *line 
 char *readline(char **line, FILE *fp)
 {
     int lineSize = 0;

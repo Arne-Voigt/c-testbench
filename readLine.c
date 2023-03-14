@@ -22,8 +22,8 @@ char *readline(char **line, int *lineSize, FILE *fp)
 
     while (fgets(*line + writeOffset , bytesToRead, fp))
     {
-        if (strcmp(*line + strlen(*line) - 1, "\n") == 0 || // eol reached
-            feof(fp))                                       // eof reached, edge case: last line in a file (no final '\n') shouldn't be returning NULL
+        if (strcmp(*line + writeOffset + strlen(*line + writeOffset) - 1, "\n") == 0 || // eol reached
+            feof(fp)) // eof reached, edge case: last line in a file (no final '\n') shouldn't be returning NULL
         {
             return *line;
         }

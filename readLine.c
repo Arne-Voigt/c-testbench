@@ -2,27 +2,36 @@
 #include <string.h>
 #include <stdlib.h>
 
-#define BUFFFERSIZE 10
+#define BUFFERSIZE 10
 
-// reads one line from a file into a buffer, increases the buffer size if necessary 
-// buffer location is written back into the parameter **line
-// returns NULL on read-error/eof otherwise returns *line 
-char *readline(char **line, FILE *fp)
+// works almost like getline(), reads one line from a file into a buffer (**line),
+// increases the buffer size if necessary, returns the used buffersize in *lineSize
+// returns NULL on read-error/eof otherwise returns *line
+char *readline(char **line, int *lineSize, FILE *fp)
 {
-    int lineSize = 0;
+    int writeOffset = 0;
+    int bytesToRead;
 
-    if (*line != NULL)
-        free(*line);
-    *line = malloc(BUFFFERSIZE * sizeof(char));
-
-    while (fgets(*line + lineSize, BUFFFERSIZE, fp))
+    if (*line == NULL)
     {
-        lineSize = strlen(*line);
-        if (strcmp(*line + lineSize - 1, "\n") == 0 || // eol reached
-            feof(fp))                                  // eof reached, edge case: last line in a file (no final '\n') shouldn't be returning NULL
+        *line = (char *)malloc(BUFFERSIZE * sizeof(char));
+        *lineSize = BUFFERSIZE;
+    }
+
+    bytesToRead = *lineSize;
+
+    while (fgets(*line + writeOffset , bytesToRead, fp))
+    {
+        if (strcmp(*line + strlen(*line) - 1, "\n") == 0 || // eol reached
+            feof(fp))                                       // eof reached, edge case: last line in a file (no final '\n') shouldn't be returning NULL
+        {
             return *line;
+        }
         // line reading not yet completted -> increase buffer
-        *line = realloc(*line, lineSize + 1 + BUFFFERSIZE);
+        *line = realloc(*line, *lineSize + BUFFERSIZE);
+        writeOffset = *lineSize - 1;    // continue wrting on top of the '\0'
+        bytesToRead = BUFFERSIZE + 1;   // "+1" -> byte of previous read '\0', can be added to the possible read length
+        *lineSize += BUFFERSIZE;
     }
     return NULL;
 }
@@ -30,12 +39,13 @@ char *readline(char **line, FILE *fp)
 int main()
 {
     char *line = NULL;
+    int lineSize = 0;
     FILE *fp;
 
     fp = fopen("readLine.txt", "r");
 
-    while (readline(&line, fp) != NULL)
-        printf("line fread: %s", line);
+    while (readline(&line, &lineSize, fp) != NULL)      // fake getline()
+        printf("buffersize: %3d;\tline read: %s", lineSize, line);
 
     fclose(fp);
     free(line);
